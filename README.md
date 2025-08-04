@@ -82,4 +82,4 @@ void loop() {
 ```
 
  - Sketchup Pro Basics
- ![Just basic stuff. Can 3-dimensionally print it!!](./pictures/sketchup.png)
+ ![Just basic stuff. Can 3-dimensionally print it!!](./pictures/Aug4/sketchup.png)
