@@ -429,17 +429,36 @@ void loop()
   delayMicroseconds(1000000 / SAMPLE_RATE_HZ - 200);
 }
 ```
-- Controller Housing Modeled
-![enter image description here](./pictures/Aug5/housing.png)
+- Controller Housing Modeling
 
 Planned to use 30x70mm PCB board (because I'm going to use 2 sensors).
 Thus, the model is sized at 94x54x32 (2 mm thickness and without a cover).
 Has 3 mm wide holes to put screws to hold the contents.
 Has holes for wires too.
 
+![enter image description here](./pictures/Aug5/originalhousing.png)
+original version ^
+![enter image description here](./pictures/Aug5/housing.png)
+revised version with screw holes ^
+![enter image description here](./pictures/Aug5/back.png)
+the back has a clip made for easy hanging (from a shirt) ^
+
+
 # 8/6
 - Sensor housing
-Made a prototype sensor model that could stay on to the wristband I bought at *Daiso*. The wristband was supposed to be wound twice so it did fit around my upper elbow.
+![enter image description here](./pictures/Aug6/wristband.jpg)
+Made a prototype sensor model that could stay on the wristband I bought at *Daiso*. The wristband was supposed to be wound twice so it did fit around my upper elbow.
+Probably going to buy a real armband (or an 'elbow band' if that exists) in the future. I just need a replacement for the real thing today (delivery takes a day), so for now, this works.
+Measured at 50mm width, it was quite flexible so I put the entry point at 14mm.
+![enter image description here](./pictures/Aug6/sensorhousing.png)
+
+- Controller Housing Revision
+Apparently, The cables didn't go through the holes on the top very well, so I added a square hole on top of the circle so it looks like this: [0] (Forgive me for the not so accurate description)
+![enter image description here](./pictures/Aug6/housingrevision.png)
+
+
+
+
 
 
 
@@ -449,9 +468,8 @@ Made a prototype sensor model that could stay on to the wristband I bought at *D
 → 63x27mm was the PCB plate's screw hole rectangle
 3D printed it. There were some little inaccuracies, but it still fit.
 Will probably widen it by a millimeter next time.
+The battery did fit but it did require some force to make it work. There were marks on the battery case when I unscrewed the controller. (Because of the solder tails)
 Will also heighten the screw holes by around 3 mm to make the battery fit better.
-
-
 
 New code for 2 MPU6050 sensors
 ```
@@ -587,10 +605,14 @@ void loop() {
 Didn't work. Not because of the code though.
 The MPU6050 can be signalled through 2 addresses: 0x68 and 0x69.
 And to give these addresses, 0x68 needs a LOW and 0x69 needs a HIGH signal from the 5V pin. That requires 5 pins in total (4 (original) +1 (5V)) and I only have 4x2 pins made on my PCB board. But the sensor with the address 0x69 needs to get a 5V signal regardless…so I just soldered the ADD pin to the VCC pin.
-Seems to be working fine.…or now.
+Seems to be working fine.…for now.
 
 # 8/8
-original feedback function
+- Feedback feature by vibrations 
+
+I ordered vibration motors but they didn't come today so I tested if the feedback feature would work correctly with serial.
+
+original feedback function (serial)
 ```
 if ((left.swingCount + right.swingCount) == 0) {
     Serial.println("swingCount sum is 0");
@@ -619,5 +641,23 @@ if (diff > 0)
     Serial.println("Move your right arm more");
 else
     Serial.println("Move your left arm more");
-
 ```
+
+- New controller housing
+Like I mentioned, I needed to make the gap between screws bigger (1mm) and make the screw holes 3mm higher (so 9mm height in total)
+![enter image description here](./pictures/Aug8/housing.png)
+I also noticed that the cable placement was kind of awkward in the earlier model so I flipped the top and bottom switch holes and then moved the holes for the cable that goes to the sensor to the left and right since, well, the sensors are on the left and right.
+
+- New sensor housing
+![enter image description here](./pictures/Aug8/sensorhousingplan.png)
+![enter image description here](./pictures/Aug8/sensorhousingsideview.png)
+Changed a LOT of things here.
+   1. Changed the clip to be in the perpendicular direction of the main body where the sensor goes
+   2. Because the arm band finally came, the clip is a lot smaller
+	   ![enter image description here](./pictures/Aug8/armband.png)
+   3. Widened the main body to accommodate the vibration motor. (Not here yet but will be in a few days)
+  4. The clip looks and feels more ergonomic (?), it's more curvy and round.
+  5. And the hole for the wire is at the center now.
+
+Also, there was a problem with the previous housing where sometimes the sensors disconnected or malfunctioned with no apparent reason, and I thought it was because the sensor housing fit too tight and was messing around with the cables. The new (final) version made it a much looser fit, but still gave me errors.
+It seems that soldering doesn't work very well in moving parts (I even wrapped heat shrinking tubes to secure the connection). Will probably find another way one way or another.
