@@ -1,3 +1,23 @@
+# Introduction
+Hi, this is my project where I try to make a device that tracks your movement with information from a mix of accelerometers and gyroscopes (linear acceleration and radial acceleration) to track arm swings. 
+
+So, why did I start this project?
+
+Let's start from the beginning.
+I do this activity at Namsan Mountain where I run with visually impaired runners with a running tether. 
+![running tether](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyLa1VS5-Fn1fT7XAX31wWF4-vY3TUKYSTnw&s)
+It keeps the visually impaired runner parallel to the volunteer (me) and lets me pull the runner in case of any obstacles / people. 
+Most tethers (all tethers I've seen) are inelastic, thus the blind runners naturally doesn't swing the arm that's tied.
+It would be fine if the blind runners switched their tether arm every run, but most runners just make it a habit of using the tether on the same arm always.
+Keep running with this habit can become a cause for unbalanced posture.
+I didn't notice it in my 2 years of running with visually impaired runners.
+But my mom did when she took a look at a group photo that was taken at the event.
+Thinking about it, I found out that the blind have a higher COG (center of gravity) velocity ([https://doi.org/10.1002/brb3.1436](https://doi.org/10.1002/brb3.1436)), and thus were more susceptible to bad posture.
+This started my journey to find a device to give feedback to blind runners to promote balanced posture through equalizing left and right arm swings (both count and distance).
+
+
+
+
 # 8/4
 
  - Arduino Basics
