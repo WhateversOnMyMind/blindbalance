@@ -5,7 +5,9 @@ So, why did I start this project?
 
 Let's start from the beginning.
 I do this activity at Namsan Mountain where I run with visually impaired runners with a running tether. 
+
 ![running tether](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyLa1VS5-Fn1fT7XAX31wWF4-vY3TUKYSTnw&s)
+
 It keeps the visually impaired runner parallel to the volunteer (me) and lets me pull the runner in case of any obstacles / people. 
 Most tethers (all tethers I've seen) are inelastic, thus the blind runners naturally doesn't swing the arm that's tied.
 It would be fine if the blind runners switched their tether arm every run, but most runners just make it a habit of using the tether on the same arm always.
