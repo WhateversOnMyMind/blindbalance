@@ -1,3 +1,27 @@
+# Objective
+Build a device that uses 2 MPU6050 sensors on each elbow to track arm swings (count and distance) to give feedback to user on how to improve arm swing balance and ultimately better posture
+# Introduction
+Hi, this is my project where I try to make a device that tracks your movement with information from a mix of accelerometers and gyroscopes (linear acceleration and radial acceleration) to track arm swings. 
+
+So, why did I start this project?
+
+Let's start from the beginning.
+I do this activity at Namsan Mountain where I run with visually impaired runners with a running tether. 
+
+![running tether](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyLa1VS5-Fn1fT7XAX31wWF4-vY3TUKYSTnw&s)
+
+It keeps the visually impaired runner parallel to the volunteer (me) and lets me pull the runner in case of any obstacles / people. 
+Most tethers (all tethers I've seen) are inelastic, thus the blind runners naturally doesn't swing the arm that's tied.
+It would be fine if the blind runners switched their tether arm every run, but most runners just make it a habit of using the tether on the same arm always.
+Keep running with this habit can become a cause for unbalanced posture.
+I didn't notice it in my 2 years of running with visually impaired runners.
+But my mom did when she took a look at a group photo that was taken at the event.
+Thinking about it, I found out that the blind have a higher COG (center of gravity) velocity ([https://doi.org/10.1002/brb3.1436](https://doi.org/10.1002/brb3.1436)), and thus were more susceptible to bad posture.
+This started my journey to find a device to give feedback to blind runners to promote balanced posture through equalizing left and right arm swings (both count and distance).
+
+
+
+
 # 8/4
 
  - Arduino Basics
@@ -661,3 +685,167 @@ Changed a LOT of things here.
 
 Also, there was a problem with the previous housing where sometimes the sensors disconnected or malfunctioned with no apparent reason, and I thought it was because the sensor housing fit too tight and was messing around with the cables. The new (final) version made it a much looser fit, but still gave me errors.
 It seems that soldering doesn't work very well in moving parts (I even wrapped heat shrinking tubes to secure the connection). Will probably find another way one way or another.
+
+# 8/16
+Finally, the wires came.
+Soldering weren't that great for hardware that moved.
+Thus, another solution I found was Dupont connectors to just clip them into place.
+It took a while, but it did result in a much smoother user experience.
+
+Another issue I had was that the sensor housing didn't have enough space for the *Duponted* wires. So I just stretched the sensor housing by 5mms. That got rid of the issue, but now it's still really hard to disassemble hardware.
+
+However, what matters is that it now works.
+
+Here is the full code with all the tricks (including motor vibrational feedback)
+```
+/****************************************************************************************
+  Jog Arm-Swing Counter – Y-axis + 60-second stats   (ESP32 LOLIN-D32  +  MPU6050)
+****************************************************************************************/
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <Wire.h>
+
+/* ── pins ── */
+#define SDA_PIN              21
+#define SCL_PIN              22
+
+/* ── sampling & calibration ── */
+#define SAMPLE_RATE_HZ       250
+#define CALIB_TIME_MS        2000
+
+/* ── swing thresholds ── */
+#define GYRO_THRESH_FWD      0.4f       // rad/s
+#define GYRO_THRESH_BACK     0.2f
+#define MIN_DELTA_THETA      0.12f      // rad ≈7°
+
+/* ── geometry ── */
+#define RADIUS_DEFAULT       0.30f      // m
+
+/* ── globals ── */
+Adafruit_MPU6050 mpu;
+float gyBias = 0.0f;
+float radius = RADIUS_DEFAULT;
+
+bool  inSwing = false;
+int   dir = 0;
+float angle = 0.0f, startAngle = 0.0f;
+uint32_t swingCount = 0;
+uint64_t lastMicros = 0;
+
+/* 60-s window */
+uint32_t windowStartMs = 0;
+uint32_t minuteSwingCount = 0;
+float    minuteDistance   = 0.0f;      // m
+
+/* ─────────── helpers ─────────── */
+void printSwing(float endAngle)
+{
+  float dTheta = endAngle - startAngle;
+  if (fabsf(dTheta) < MIN_DELTA_THETA) { inSwing = false; return; }
+
+  ++swingCount;
+  float arcLen = fabsf(dTheta) * radius;     // m
+
+  /* add to 60-s stats */
+  ++minuteSwingCount;
+  minuteDistance += arcLen;
+
+  Serial.print(F("Swing #"));  Serial.print(swingCount);
+  Serial.print(F(" │ Angle: "));  Serial.print(fabsf(dTheta)*57.29578f,1);
+  Serial.print(F(" ° │ Length: ")); Serial.print(arcLen*100.0f,1);
+  Serial.println(F(" cm"));
+  inSwing = false;
+}
+
+void maybePrintMinuteStats()
+{
+  uint32_t now = millis();
+  if (now - windowStartMs >= 60000UL) {           // 60 s elapsed
+    Serial.print(F("[1-min] Swings: "));
+    Serial.print(minuteSwingCount);
+    Serial.print(F(" │ Distance: "));
+    Serial.print(minuteDistance*100.0f,1);        // cm
+    Serial.println(F(" cm"));
+
+    /* reset window */
+    windowStartMs    = now;
+    minuteSwingCount = 0;
+    minuteDistance   = 0.0f;
+  }
+}
+
+void calibrateGyro()
+{
+  Serial.println(F("\n*** Keep sensor STILL – calibrating (2 s)… ***"));
+  delay(400);
+  uint32_t t0 = millis();  float sum = 0;  uint32_t n = 0;
+  sensors_event_t a,g,t;
+  while (millis()-t0 < CALIB_TIME_MS){ mpu.getEvent(&a,&g,&t); sum += g.gyro.y; ++n; delay(4);}
+  gyBias = sum / n;
+
+  swingCount = 0; angle = 0; inSwing = false; dir = 0;
+  windowStartMs = millis(); minuteSwingCount = 0; minuteDistance = 0;
+  Serial.print(F("Gyro-Y bias = ")); Serial.print(gyBias,6); Serial.println(F(" rad/s"));
+}
+
+void serialMenu()
+{
+  if (!Serial.available()) return;
+  char c = Serial.read();
+  if (c=='r') calibrateGyro();
+  else if (c=='d'){
+    float r=Serial.parseFloat();
+    if(r>0.05&&r<1.0){radius=r;Serial.print(F("Radius set to "));
+      Serial.print(radius*100.0f,1);Serial.println(F(" cm"));}}
+}
+
+/* ─────────── setup ─────────── */
+void setup()
+{
+  Serial.begin(115200);
+  Wire.begin(SDA_PIN, SCL_PIN);
+
+  if(!mpu.begin()){Serial.println(F("MPU6050 not found!"));while(1)delay(10);}
+  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+  calibrateGyro();
+  lastMicros = micros();
+
+  Serial.println(F("\nCommands:  r = recalibrate  |  d <metres> = set radius\n"));
+}
+
+/* ─────────── loop ─────────── */
+void loop()
+{
+  /* Δt */
+  uint64_t now = micros();
+  float dt = (now - lastMicros)*1e-6f;
+  lastMicros = now;
+
+  /* IMU */
+  sensors_event_t a,g,t;  mpu.getEvent(&a,&g,&t);
+  float wy = g.gyro.y - gyBias;
+
+  /* integrate θ */
+  angle += wy * dt;
+
+  /* FSM */
+  if(!inSwing)
+  {
+    if (wy >  GYRO_THRESH_FWD)   { inSwing=true; dir=+1; startAngle=angle; }
+    else if (wy < -GYRO_THRESH_BACK){ inSwing=true; dir=-1; startAngle=angle;}
+  }
+  else
+  {
+    if (dir==+1 && wy < -GYRO_THRESH_BACK) printSwing(angle);
+    else if (dir==-1 && wy >  GYRO_THRESH_FWD) printSwing(angle);
+  }
+
+  maybePrintMinuteStats();
+  serialMenu();
+  delayMicroseconds(1000000/SAMPLE_RATE_HZ - 200);
+}
+```
+This also outputs data to google sheets so I also made a small website to analyze the data.
+[Link](blindrunning.com/data)

@@ -5,8 +5,8 @@
 #include <HTTPClient.h>
 
 /* ── WiFi ── */
-const char* ssid     = "makezone";
-const char* password = "0123456789abcdef";
+const char* ssid     = "GalaxyS23";
+const char* password = "12345678";
 const char* scriptURL = "https://script.google.com/macros/s/AKfycbzBvJKEtq9sOr6JkIPRjNUf_4xROrjfYzzAtlElzlUsUg69tv45QoupNosSsXKZQs7l/exec";
 
 /* ── pins ── */
