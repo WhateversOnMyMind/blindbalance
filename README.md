@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 # Objective
 Build a device that uses 2 MPU6050 sensors on each elbow to track arm swings (count and distance) to give feedback to user on how to improve arm swing balance and ultimately better posture
+=======
+>>>>>>> 9a92b26fbc7dfd73c1ad28d76f8ad0d9f775afb2
 # Introduction
 Hi, this is my project where I try to make a device that tracks your movement with information from a mix of accelerometers and gyroscopes (linear acceleration and radial acceleration) to track arm swings. 
 
