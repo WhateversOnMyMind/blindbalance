@@ -852,3 +852,15 @@ void loop()
 ```
 This also outputs data to google sheets so I also made a small website to analyze the data.
 [Link](blindrunning.com/data)
+
+# 12/31 (Happy New Years) (The Big 26 Now)
+
+It's been quite some time since I journaled my progress but nevertheless I didn't stop upgrading my device.
+There was this huge problem where the single Li-ion battery didn't have enough power to maintain both the IMUs, both the vibration motors, and the microcontroller at the same time. I fixed it with two Li-ion batteries, one powering the IMUs and the MCU and the other powering the vibration motor.
+
+Still, I kinda felt like it was inconvient for the user to charge two seperate batteries simultaenously so I thought about a way to fix this issue.
+Making the device not connect back to a single MCU and making just two cases to support the MCU, vibration motor, and the IMU looked like a good idea.
+
+So i started wiring but I did cause a short accidently and blew the battery and the charging module and waste a hell lot of time but it was fixed.
+
+![enter image description here](./pictures/wirelesswiring.jpg)
