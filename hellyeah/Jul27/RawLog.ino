@@ -5,6 +5,7 @@
 
 #include <FS.h>
 #include <LittleFS.h>
+#include <stdio.h>
 
 #define RAWLOG_PATH        "/rawlog.csv"
 #define RAWLOG_MAX_MS       180000UL   // 3 min safety cap
@@ -40,31 +41,42 @@ void rawLogTick() {
     return;
   }
 
-  Sample s = readSample();
-  String row = String(millis()) + "," +
-               String(s.ax, 4) + "," + String(s.ay, 4) + "," + String(s.az, 4) + "," +
-               String(s.gx, 4) + "," + String(s.gy, 4) + "," + String(s.gz, 4) + "," +
-               String(s.tempC, 2) + "\n";
-  g_rawLogFile.print(row);
-  g_rawLogBytes += row.length();
+  Sample s = g_lastSample;
+  char row[160];
+  int len = snprintf(row, sizeof(row), "%lu,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f\n",
+                      (unsigned long)millis(), s.ax, s.ay, s.az, s.gx, s.gy, s.gz, s.tempC);
+  g_rawLogFile.write((const uint8_t*)row, len);
+  g_rawLogBytes += len;
 }
 
 void handleRawLogStart() {
+  webServer.sendHeader("Access-Control-Allow-Origin", "*");
   rawLogStop(); // in case already running, restart cleanly
   g_rawLogFile = LittleFS.open(RAWLOG_PATH, "w");
-  g_rawLogFile.println("ts_ms,ax,ay,az,gx,gy,gz,tempC");
-  g_rawLogBytes = 0;
+  if (!g_rawLogFile) {
+    webServer.send(500, "text/plain", "failed to open log file (check LittleFS/partition)");
+    return;
+  }
+  const char header[] = "ts_ms,ax,ay,az,gx,gy,gz,tempC\n";
+  g_rawLogFile.print(header);
+  g_rawLogBytes = strlen(header);
   g_rawLogStartMs = millis();
   g_rawLogActive = true;
   webServer.send(200, "application/json", "{\"rawLogging\":true}");
 }
 
 void handleRawLogStop() {
+  webServer.sendHeader("Access-Control-Allow-Origin", "*");
   rawLogStop();
   webServer.send(200, "application/json", "{\"rawLogging\":false}");
 }
 
 void handleRawLogDownload() {
+  if (g_rawLogActive) {
+    webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    webServer.send(409, "text/plain", "stop logging before downloading");
+    return;
+  }
   File f = LittleFS.open(RAWLOG_PATH, "r");
   if (!f) {
     webServer.send(404, "text/plain", "no log file");
@@ -76,6 +88,7 @@ void handleRawLogDownload() {
 }
 
 void handleRawLogClear() {
+  webServer.sendHeader("Access-Control-Allow-Origin", "*");
   if (g_rawLogActive) {
     webServer.send(409, "text/plain", "stop logging before clearing");
     return;

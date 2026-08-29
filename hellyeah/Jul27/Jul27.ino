@@ -96,6 +96,8 @@ SPIClass spi(FSPI);
 
 struct Sample { float ax, ay, az, gx, gy, gz, tempC; };
 
+Sample g_lastSample;   // most recent IMU reading, shared so RawLog.ino doesn't need its own SPI read
+
 /* ── this board's arm state ── */
 float    g_bias = 0.0f;             // rad/s
 float    g_radius = RADIUS_DEFAULT;
@@ -221,6 +223,7 @@ void printSwing(float endAngle) {
 
 void updateArm(float dt) {
   Sample s = readSample();
+  g_lastSample = s;
 
   // ── SWING AXIS: original used Y. If not Y on this mounting, change s.gy
   //    -> s.gx or s.gz here AND in calibrateGyro(). ──
