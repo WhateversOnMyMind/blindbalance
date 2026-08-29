@@ -371,6 +371,7 @@ void setup() {
 
   initEspNow();                  // after WiFi so we inherit the AP's channel
   webUiBegin();                  // start local web server + mDNS
+  rawLogBegin();                 // mount LittleFS for raw-log capture sessions
 
   calibrateGyro();               // keep the arm STILL here
 
@@ -390,6 +391,7 @@ void loop() {
 
   updateArm(dt);
   webUiHandleClient();           // service any pending HTTP requests
+  rawLogTick();                  // capture a raw sample row if a log session is active
 
   if (millis() - lastFbTime >= FB_WINDOW_MS) {
     feedbackTick();

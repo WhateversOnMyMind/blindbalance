@@ -14,6 +14,8 @@ static String jsonState() {
   json += "\"arm\":\""        + String(ARM_CHAR) + "\",";
   json += "\"motorEnabled\":" + String(g_motorEnabled ? "true" : "false") + ",";
   json += "\"peerFresh\":"    + String(peerFresh ? "true" : "false") + ",";
+  json += "\"rawLogging\":"   + String(rawLogActive() ? "true" : "false") + ",";
+  json += "\"rawLogBytes\":"  + String((unsigned long)rawLogBytes()) + ",";
   json += "\"tempC\":"        + String(s.tempC, 1) + ",";
   json += "\"uptimeMs\":"     + String(millis());
   json += "}";
@@ -111,6 +113,7 @@ void webUiBegin() {
     webServer.on("/", HTTP_GET, handleRoot);
     webServer.on("/toggle", HTTP_POST, handleToggle);
   }
+  rawLogRegisterRoutes();
   webServer.begin();
 }
 
