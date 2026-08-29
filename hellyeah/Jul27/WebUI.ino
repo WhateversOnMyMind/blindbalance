@@ -20,7 +20,25 @@ static String jsonState() {
   return json;
 }
 
+static void postToggleEvent(bool state) {
+  if (WiFi.status() != WL_CONNECTED) return;
+  HTTPClient http;
+  http.begin(scriptURL);
+  http.addHeader("Content-Type", "application/json");
+  String json = "{\"event\":\"motor_toggle\",\"state\":\"" +
+                String(state ? "on" : "off") + "\",\"ts\":" + String(millis()) + "}";
+  http.POST(json);
+  http.end();
+}
+
 void handleState() {
+  webServer.sendHeader("Access-Control-Allow-Origin", "*");
+  webServer.send(200, "application/json", jsonState());
+}
+
+void handleToggle() {
+  g_motorEnabled = !g_motorEnabled;
+  postToggleEvent(g_motorEnabled);
   webServer.sendHeader("Access-Control-Allow-Origin", "*");
   webServer.send(200, "application/json", jsonState());
 }
@@ -34,6 +52,9 @@ void webUiBegin() {
   }
 
   webServer.on("/state", HTTP_GET, handleState);
+  if (I_AM_LEFT) {
+    webServer.on("/toggle", HTTP_POST, handleToggle);
+  }
   webServer.begin();
 }
 
