@@ -202,6 +202,7 @@ void calibrateGyro() {
 
 void recalibrateSoft() {
   Serial.print(F("Soft recalibrating ")); Serial.println(ARM_CHAR);
+  delay(400);   // let residual motion from triggering this settle, same as calibrateGyro()
   uint32_t t0 = millis();
   float sum = 0; uint32_t n = 0;
   while (millis() - t0 < CALIB_TIME_MS) {
