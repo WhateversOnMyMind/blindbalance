@@ -38,6 +38,12 @@ void handleState() {
   webServer.send(200, "application/json", jsonState());
 }
 
+void handleRecalibrate() {
+  recalibrateSoft();
+  webServer.sendHeader("Access-Control-Allow-Origin", "*");
+  webServer.send(200, "application/json", jsonState());
+}
+
 void handleToggle() {
   g_motorEnabled = !g_motorEnabled;
   postToggleEvent(g_motorEnabled);
@@ -132,6 +138,7 @@ void webUiBegin() {
   }
 
   webServer.on("/state", HTTP_GET, handleState);
+  webServer.on("/recalibrate", HTTP_POST, handleRecalibrate);
   if (I_AM_LEFT) {
     webServer.on("/", HTTP_GET, handleRoot);
     webServer.on("/toggle", HTTP_POST, handleToggle);

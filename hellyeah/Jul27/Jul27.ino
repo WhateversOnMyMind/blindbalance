@@ -78,6 +78,7 @@ SPIClass spi(FSPI);
 #define GYRO_THRESH_BACK     0.4f
 #define RADIUS_DEFAULT       0.30f
 #define ACCEL_MAG_THRESH_DELTA 2.0f
+#define ACCEL_IDLE_TOL       1.0f     // m/s^2 tolerance around 1g for the bias-tracker idle gate
 #define SWING_MAX_MS         1200
 #define WY_IDLE              0.12f
 #define END_ZERO_CROSS_MS    180
@@ -199,6 +200,19 @@ void calibrateGyro() {
   Serial.println(g_bias, 6);
 }
 
+void recalibrateSoft() {
+  Serial.print(F("Soft recalibrating ")); Serial.println(ARM_CHAR);
+  uint32_t t0 = millis();
+  float sum = 0; uint32_t n = 0;
+  while (millis() - t0 < CALIB_TIME_MS) {
+    sum += readSample().gy * DEG2RAD;   // <-- swing axis, same as calibrateGyro()
+    ++n; delay(4);
+  }
+  g_bias = sum / n;
+  Serial.print(ARM_CHAR); Serial.print(F(" bias (soft) = "));
+  Serial.println(g_bias, 6);
+}
+
 void printSwing(float endAngle) {
   uint32_t now = millis();
   if (now - g_lastSwingTime < 400) {
@@ -252,7 +266,7 @@ void updateArm(float dt) {
     if (crossed || zeroLike || timeout) printSwing(g_angle);
   }
 
-  if (fabsf(wy) < WY_IDLE)
+  if (fabsf(wy) < WY_IDLE && fabsf(aMag - 9.8f) < ACCEL_IDLE_TOL)
     g_bias = (1.0f - BIAS_ADAPT_ALPHA) * g_bias + BIAS_ADAPT_ALPHA * wy_raw;
 }
 
@@ -380,6 +394,26 @@ void setup() {
   initEspNow();                  // after WiFi so we inherit the AP's channel
   webUiBegin();                  // start local web server + mDNS
   rawLogBegin();                 // mount LittleFS for raw-log capture sessions
+
+  // Wait for the IMU to thermally stabilize before locking in the bias
+  // calibration -- self-heating right after power-on can shift gyro bias
+  // for the first tens of seconds. This reuses time already spent on the
+  // above setup steps rather than asking the wearer to hold still longer.
+  Serial.print(F("Waiting for IMU warm-up"));
+  float lastTempC = readSample().tempC;
+  uint32_t warmupStart = millis();
+  uint32_t stableSinceMs = millis();
+  while (millis() - warmupStart < 45000) {
+    delay(1000);
+    float tempC = readSample().tempC;
+    if (fabsf(tempC - lastTempC) > 0.2f) {
+      stableSinceMs = millis();
+    }
+    lastTempC = tempC;
+    Serial.print(".");
+    if (millis() - stableSinceMs > 5000) break;   // stable for 5s straight
+  }
+  Serial.println();
 
   calibrateGyro();               // keep the arm STILL here
 
