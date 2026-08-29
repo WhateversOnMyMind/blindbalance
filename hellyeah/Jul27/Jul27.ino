@@ -309,6 +309,11 @@ void initEspNow() {
   Serial.printf("ESP-NOW ready on channel %d\n", WiFi.channel());
 }
 
+/* ── check if the peer's data is fresh (used for cross-tab peer-state tracking) ── */
+bool peerIsFresh() {
+  return (peerArm != '?') && (millis() - peerRxMs < FB_PEER_TIMEOUT);
+}
+
 /* ── run every FB_WINDOW_MS: swap windows, compute balance, drive own motor ── */
 void feedbackTick() {
   uint32_t myC = g_fbCount;  float myD = g_fbDist;
@@ -319,7 +324,7 @@ void feedbackTick() {
   esp_now_send(BCAST, (uint8_t*)&m, sizeof(m));
 
   // need a live peer to compute balance
-  bool peerFresh = (peerArm != '?') && (millis() - peerRxMs < FB_PEER_TIMEOUT);
+  bool peerFresh = peerIsFresh();
   if (!peerFresh) { analogWrite(PIN_VIBE, 0); return; }
 
   uint32_t pC = peerCount; float pD = peerDist;

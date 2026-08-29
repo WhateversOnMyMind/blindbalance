@@ -6,6 +6,10 @@
 #include <FS.h>
 #include <LittleFS.h>
 #include <stdio.h>
+#include <WebServer.h>
+
+extern WebServer webServer;   // defined in WebUI.ino; declared here since RawLog.ino
+                               // is concatenated before WebUI.ino in Arduino's build order
 
 #define RAWLOG_PATH        "/rawlog.csv"
 #define RAWLOG_MAX_MS       180000UL   // 3 min safety cap
@@ -81,6 +85,7 @@ void handleRawLogDownload() {
   }
   File f = LittleFS.open(RAWLOG_PATH, "r");
   if (!f) {
+    webServer.sendHeader("Access-Control-Allow-Origin", "*");
     webServer.send(404, "text/plain", "no log file");
     return;
   }

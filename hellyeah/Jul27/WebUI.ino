@@ -8,8 +8,8 @@
 WebServer webServer(80);
 
 static String jsonState() {
-  Sample s = readSample();
-  bool peerFresh = (peerArm != '?') && (millis() - peerRxMs < FB_PEER_TIMEOUT);
+  Sample s = g_lastSample;
+  bool peerFresh = peerIsFresh();
   String json = "{";
   json += "\"arm\":\""        + String(ARM_CHAR) + "\",";
   json += "\"motorEnabled\":" + String(g_motorEnabled ? "true" : "false") + ",";
