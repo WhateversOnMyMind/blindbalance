@@ -43,6 +43,57 @@ void handleToggle() {
   webServer.send(200, "application/json", jsonState());
 }
 
+static const char CONTROL_PAGE[] PROGMEM = R"HTML(
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlindBalance Control</title>
+<style>
+body{font-family:sans-serif;text-align:center;padding:1em;background:#111;color:#eee}
+button{font-size:1.5em;padding:0.6em 1.2em;border-radius:0.5em;border:none}
+.on{background:#2ecc71}.off{background:#e74c3c}
+.tile{margin:1em auto;padding:0.8em;border-radius:0.5em;background:#222;max-width:20em}
+.stale{opacity:0.4}
+</style></head><body>
+<h2>Motor Feedback</h2>
+<button id="toggleBtn" onclick="toggle()">...</button>
+<div class="tile" id="tileL"><b>Left</b><div id="infoL">loading...</div></div>
+<div class="tile" id="tileR"><b>Right</b><div id="infoR">loading...</div></div>
+<script>
+async function poll(){
+  try{
+    const l = await (await fetch('/state')).json();
+    render(l, 'infoL', 'tileL');
+    setBtn(l.motorEnabled);
+  }catch(e){}
+  try{
+    const r = await (await fetch('http://bb-right.local/state')).json();
+    render(r, 'infoR', 'tileR');
+  }catch(e){ document.getElementById('tileR').classList.add('stale'); }
+}
+function render(s, infoId, tileId){
+  document.getElementById(infoId).innerText =
+    'motor: ' + (s.motorEnabled ? 'on' : 'off') +
+    ' | peer: ' + (s.peerFresh ? 'ok' : 'stale') +
+    ' | temp: ' + s.tempC + 'C';
+  document.getElementById(tileId).classList.remove('stale');
+}
+function setBtn(on){
+  const b = document.getElementById('toggleBtn');
+  b.innerText = on ? 'Motor: ON (tap to disable)' : 'Motor: OFF (tap to enable)';
+  b.className = on ? 'on' : 'off';
+}
+async function toggle(){
+  const s = await (await fetch('/toggle', {method:'POST'})).json();
+  setBtn(s.motorEnabled);
+}
+poll();
+setInterval(poll, 1500);
+</script></body></html>
+)HTML";
+
+void handleRoot() {
+  webServer.send(200, "text/html", CONTROL_PAGE);
+}
+
 void webUiBegin() {
   String host = String("bb-") + (I_AM_LEFT ? "left" : "right");
   if (!MDNS.begin(host.c_str())) {
@@ -53,6 +104,7 @@ void webUiBegin() {
 
   webServer.on("/state", HTTP_GET, handleState);
   if (I_AM_LEFT) {
+    webServer.on("/", HTTP_GET, handleRoot);
     webServer.on("/toggle", HTTP_POST, handleToggle);
   }
   webServer.begin();
