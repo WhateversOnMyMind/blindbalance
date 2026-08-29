@@ -110,7 +110,8 @@ async function toggle(){
   setBtn(s.motorEnabled);
 }
 async function rawlog(base, action){
-  await fetch(base + '/rawlog/' + action, {method:'POST'});
+  const r = await fetch(base + '/rawlog/' + action, {method:'POST'});
+  if (!r.ok) alert('rawlog ' + action + ' failed (' + r.status + ')');
   poll();
 }
 poll();
