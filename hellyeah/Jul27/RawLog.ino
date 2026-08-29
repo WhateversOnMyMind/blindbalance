@@ -45,6 +45,8 @@ void rawLogTick() {
   char row[160];
   int len = snprintf(row, sizeof(row), "%lu,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.2f\n",
                       (unsigned long)millis(), s.ax, s.ay, s.az, s.gx, s.gy, s.gz, s.tempC);
+  if (len < 0) return;
+  if ((size_t)len >= sizeof(row)) len = sizeof(row) - 1;
   g_rawLogFile.write((const uint8_t*)row, len);
   g_rawLogBytes += len;
 }
