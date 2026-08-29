@@ -58,16 +58,20 @@ button{font-size:1.5em;padding:0.6em 1.2em;border-radius:0.5em;border:none}
 <div class="tile" id="tileL"><b>Left</b><div id="infoL">loading...</div></div>
 <div class="tile" id="tileR"><b>Right</b><div id="infoR">loading...</div></div>
 <script>
+let isPolling = false;
 async function poll(){
+  if (isPolling) return;
+  isPolling = true;
   try{
     const l = await (await fetch('/state')).json();
     render(l, 'infoL', 'tileL');
     setBtn(l.motorEnabled);
-  }catch(e){}
+  }catch(e){ document.getElementById('tileL').classList.add('stale'); }
   try{
     const r = await (await fetch('http://bb-right.local/state')).json();
     render(r, 'infoR', 'tileR');
   }catch(e){ document.getElementById('tileR').classList.add('stale'); }
+  isPolling = false;
 }
 function render(s, infoId, tileId){
   document.getElementById(infoId).innerText =
