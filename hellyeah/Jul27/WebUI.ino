@@ -26,7 +26,7 @@ static void postToggleEvent(bool state) {
   http.begin(scriptURL);
   http.addHeader("Content-Type", "application/json");
   String json = "{\"event\":\"motor_toggle\",\"state\":\"" +
-                String(state ? "on" : "off") + "\",\"ts\":" + String(millis()) + "}";
+                String(state ? "on" : "off") + "\",\"ts\":" + String((uint32_t)time(nullptr)) + "}";
   http.POST(json);
   http.end();
 }

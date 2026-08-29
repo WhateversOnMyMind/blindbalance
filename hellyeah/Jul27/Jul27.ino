@@ -26,6 +26,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <math.h>
+#include <time.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <esp_now.h>
@@ -358,6 +359,15 @@ void setup() {
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
   Serial.println("\nWiFi connected!");
+
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");   // UTC epoch time for event logging
+  Serial.print(F("Syncing time"));
+  uint32_t ntpStart = millis();
+  while (time(nullptr) < 1000000000UL && millis() - ntpStart < 5000) {
+    delay(100);
+    Serial.print(".");
+  }
+  Serial.println();
 
   initEspNow();                  // after WiFi so we inherit the AP's channel
   webUiBegin();                  // start local web server + mDNS
