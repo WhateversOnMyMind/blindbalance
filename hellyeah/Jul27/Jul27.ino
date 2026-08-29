@@ -360,6 +360,7 @@ void setup() {
   Serial.println("\nWiFi connected!");
 
   initEspNow();                  // after WiFi so we inherit the AP's channel
+  webUiBegin();                  // start local web server + mDNS
 
   calibrateGyro();               // keep the arm STILL here
 
@@ -378,6 +379,7 @@ void loop() {
   lastMicros = now;
 
   updateArm(dt);
+  webUiHandleClient();           // service any pending HTTP requests
 
   if (millis() - lastFbTime >= FB_WINDOW_MS) {
     feedbackTick();
