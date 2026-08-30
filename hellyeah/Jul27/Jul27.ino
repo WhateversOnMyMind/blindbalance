@@ -38,6 +38,15 @@
 #endif
 static const bool I_AM_LEFT = (ARM_CHAR == 'L');
 
+// Manual forward declarations for functions defined in other sketch tabs.
+// Arduino normally auto-generates these across tabs, but its scanner can get
+// confused by the brace-heavy CONTROL_PAGE raw string literal in WebUI.ino,
+// so these are spelled out explicitly instead of relying on that.
+void webUiBegin();
+void webUiHandleClient();
+void rawLogBegin();
+void rawLogTick();
+
 /* ── WiFi ── */
 const char* ssid      = "Aaa";
 const char* password  = "yoyoyoyo";
