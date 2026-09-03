@@ -20,7 +20,7 @@
  */
 
 // ─────────── pick this board's arm ───────────
-//#define ARM_IS_LEFT          // <-- comment out on the RIGHT board
+#define ARM_IS_LEFT          // <-- comment out on the RIGHT board
 // ─────────────────────────────────────────────
 
 #include <Arduino.h>
@@ -391,6 +391,7 @@ void setup() {
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
   Serial.println("\nWiFi connected!");
+  Serial.print(F("IP address: ")); Serial.println(WiFi.localIP());
 
   configTime(0, 0, "pool.ntp.org", "time.nist.gov");   // UTC epoch time for event logging
   Serial.print(F("Syncing time"));
