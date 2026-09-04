@@ -16,6 +16,7 @@ static String jsonState() {
   json += "\"peerFresh\":"    + String(peerFresh ? "true" : "false") + ",";
   json += "\"rawLogging\":"   + String(rawLogActive() ? "true" : "false") + ",";
   json += "\"rawLogBytes\":"  + String((unsigned long)rawLogBytes()) + ",";
+  json += "\"feedbackDeadZone\":" + String(g_feedbackDeadZone, 3) + ",";
   json += "\"tempC\":"        + String(s.tempC, 1) + ",";
   json += "\"uptimeMs\":"     + String(millis());
   json += "}";
@@ -51,6 +52,17 @@ void handleToggle() {
   webServer.send(200, "application/json", jsonState());
 }
 
+void handleSetSensitivity() {
+  if (webServer.hasArg("value")) {
+    float v = webServer.arg("value").toFloat();
+    if (v < 0.0f) v = 0.0f;
+    if (v > 0.3f) v = 0.3f;
+    g_feedbackDeadZone = v;
+  }
+  webServer.sendHeader("Access-Control-Allow-Origin", "*");
+  webServer.send(200, "application/json", jsonState());
+}
+
 static const char CONTROL_PAGE[] PROGMEM = R"HTML(
 <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BlindBalance Control</title>
@@ -66,6 +78,13 @@ button{font-size:1.5em;padding:0.6em 1.2em;border-radius:0.5em;border:none}
 </style></head><body>
 <h2>Motor Feedback</h2>
 <button id="toggleBtn" onclick="toggle()">...</button>
+<div class="tile">
+  <b>Feedback Sensitivity</b>
+  <div><input type="range" id="sensSlider" min="0" max="0.3" step="0.005" value="0.055"
+       oninput="document.getElementById('sensVal').innerText=this.value"
+       onchange="setSensitivity(this.value)"></div>
+  <div>dead zone: <span id="sensVal">0.055</span> (lower = more sensitive)</div>
+</div>
 <div class="tile" id="tileL"><b>Left</b><div id="infoL">loading...</div>
   <div class="rawctl">
     <button onclick="rawlog('','start')">Start log</button>
@@ -91,6 +110,7 @@ async function poll(){
     const l = await (await fetch('/state')).json();
     render(l, 'infoL', 'tileL');
     setBtn(l.motorEnabled);
+    syncSensitivity(l.feedbackDeadZone);
   }catch(e){ document.getElementById('tileL').classList.add('stale'); }
   try{
     const r = await (await fetch('http://bb-right.local/state')).json();
@@ -114,6 +134,15 @@ function setBtn(on){
 async function toggle(){
   const s = await (await fetch('/toggle', {method:'POST'})).json();
   setBtn(s.motorEnabled);
+}
+function syncSensitivity(v){
+  const slider = document.getElementById('sensSlider');
+  if (document.activeElement === slider) return;   // don't fight the user mid-drag
+  slider.value = v;
+  document.getElementById('sensVal').innerText = v;
+}
+async function setSensitivity(v){
+  await fetch('/sensitivity?value=' + v, {method:'POST'});
 }
 async function rawlog(base, action){
   const r = await fetch(base + '/rawlog/' + action, {method:'POST'});
@@ -142,6 +171,7 @@ void webUiBegin() {
   if (I_AM_LEFT) {
     webServer.on("/", HTTP_GET, handleRoot);
     webServer.on("/toggle", HTTP_POST, handleToggle);
+    webServer.on("/sensitivity", HTTP_POST, handleSetSensitivity);
   }
   rawLogRegisterRoutes();
   webServer.begin();

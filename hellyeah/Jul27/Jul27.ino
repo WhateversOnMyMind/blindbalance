@@ -20,7 +20,7 @@
  */
 
 // ─────────── pick this board's arm ───────────
-#define ARM_IS_LEFT          // <-- comment out on the RIGHT board
+//#define ARM_IS_LEFT          // <-- comment out on the RIGHT board
 // ─────────────────────────────────────────────
 
 #include <Arduino.h>
@@ -121,6 +121,7 @@ uint32_t g_fbCount = 0;             // feedback window
 float    g_fbDist  = 0.0f;          // feedback window (m)
 uint32_t g_lastSwingTime = 0;
 volatile bool g_motorEnabled = true;   // LEFT sets via /toggle; RIGHT adopts from peer packets
+volatile float g_feedbackDeadZone = FB_DEAD_ZONE;   // LEFT sets via /sensitivity; RIGHT adopts from peer packets
 uint32_t g_swingStartMs = 0;
 
 uint64_t lastMicros = 0;
@@ -129,10 +130,11 @@ unsigned long lastFbTime   = 0;
 
 /* ── ESP-NOW peer exchange ── */
 typedef struct __attribute__((packed)) {
-  char     arm;          // 'L' or 'R'
-  uint32_t count;        // peer's last feedback-window swing count
-  float    distance;     // peer's last feedback-window arc length (m)
-  bool     motorEnabled; // sender's motor mode (only 'L' is authoritative)
+  char     arm;              // 'L' or 'R'
+  uint32_t count;            // peer's last feedback-window swing count
+  float    distance;         // peer's last feedback-window arc length (m)
+  bool     motorEnabled;     // sender's motor mode (only 'L' is authoritative)
+  float    feedbackDeadZone; // sender's dead-zone setting (only 'L' is authoritative)
 } PeerMsg;
 
 static uint8_t BCAST[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
@@ -316,7 +318,10 @@ void onRecv(const uint8_t* /*mac*/, const uint8_t* data, int len) {
   peerCount = m.count;
   peerDist  = m.distance;
   peerRxMs  = millis();
-  if (!I_AM_LEFT && m.arm == 'L') g_motorEnabled = m.motorEnabled;
+  if (!I_AM_LEFT && m.arm == 'L') {
+    g_motorEnabled = m.motorEnabled;
+    g_feedbackDeadZone = m.feedbackDeadZone;
+  }
 }
 
 void initEspNow() {
@@ -344,7 +349,8 @@ void feedbackTick() {
   g_fbCount = 0; g_fbDist = 0;
 
   // broadcast my just-finished window
-  PeerMsg m; m.arm = ARM_CHAR; m.count = myC; m.distance = myD; m.motorEnabled = g_motorEnabled;
+  PeerMsg m; m.arm = ARM_CHAR; m.count = myC; m.distance = myD;
+  m.motorEnabled = g_motorEnabled; m.feedbackDeadZone = g_feedbackDeadZone;
   esp_now_send(BCAST, (uint8_t*)&m, sizeof(m));
 
   // need a live peer to compute balance
@@ -365,9 +371,9 @@ void feedbackTick() {
   float myShare    = I_AM_LEFT ? leftShare : (1.0f - leftShare);
 
   float delta = 0.5f - myShare;              // >0 => my arm is lagging
-  if (delta <= FB_DEAD_ZONE) { analogWrite(PIN_VIBE, 0); return; }  // balanced or ahead
+  if (delta <= g_feedbackDeadZone) { analogWrite(PIN_VIBE, 0); return; }  // balanced or ahead
 
-  float intensity = (delta - FB_DEAD_ZONE) / (0.5f - FB_DEAD_ZONE);
+  float intensity = (delta - g_feedbackDeadZone) / (0.5f - g_feedbackDeadZone);
   if (intensity < 0) intensity = 0;
   if (intensity > 1) intensity = 1;
   int pwm = (int)(255.0f * intensity);
