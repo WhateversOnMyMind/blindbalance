@@ -18,20 +18,37 @@ static String jsonState() {
   json += "\"rawLogBytes\":"  + String((unsigned long)rawLogBytes()) + ",";
   json += "\"feedbackDeadZone\":" + String(g_feedbackDeadZone, 3) + ",";
   json += "\"tempC\":"        + String(s.tempC, 1) + ",";
+  const telemetry::Status upload = telemetry::status();
+  json += "\"telemetryReady\":" + String(upload.ready ? "true" : "false") + ",";
+  json += "\"uploadBusy\":" + String(upload.busy ? "true" : "false") + ",";
+  json += "\"uploadQueued\":" + String(upload.queued) + ",";
+  json += "\"uploadDropped\":" + String(upload.dropped) + ",";
+  json += "\"uploadFailed\":" + String(upload.failed) + ",";
+  json += "\"uploadUnconfirmed\":" + String(upload.unconfirmed) + ",";
+  json += "\"uploadSucceeded\":" + String(upload.succeeded) + ",";
+  json += "\"lastUploadMs\":" + String(upload.lastDurationMs) + ",";
+  json += "\"lastHttpCode\":" + String(upload.lastHttpCode) + ",";
+  json += "\"windowStartMs\":" + String(g_lastWindow.startMs) + ",";
+  json += "\"windowEndMs\":" + String(g_lastWindow.endMs) + ",";
+  json += "\"windowLateMs\":" + String(g_lastWindow.lateMs) + ",";
+  json += "\"windowMissedDeadlines\":" + String(g_lastWindow.missedDeadlines) + ",";
+  json += "\"maxSampleGapUs\":" + String(g_maxSampleGapUs) + ",";
+  json += "\"sampleGapCount\":" + String(g_sampleGapCount) + ",";
   json += "\"uptimeMs\":"     + String(millis());
   json += "}";
   return json;
 }
 
 static void postToggleEvent(bool state) {
-  if (WiFi.status() != WL_CONNECTED) return;
-  HTTPClient http;
-  http.begin(scriptURL);
-  http.addHeader("Content-Type", "application/json");
-  String json = "{\"event\":\"motor_toggle\",\"state\":\"" +
-                String(state ? "on" : "off") + "\",\"ts\":" + String((uint32_t)time(nullptr)) + "}";
-  http.POST(json);
-  http.end();
+  telemetry::Job job = {};
+  job.kind = telemetry::Kind::Toggle;
+  job.arm = ARM_CHAR;
+  job.enabled = state;
+  job.bootId = g_telemetryBoot;
+  job.sequence = ++g_telemetrySequence;
+  job.capturedMs = millis();
+  job.epochSeconds = static_cast<uint32_t>(time(nullptr));
+  if (!telemetry::enqueue(job)) Serial.println(F("Toggle event dropped: upload queue unavailable/full"));
 }
 
 void handleState() {

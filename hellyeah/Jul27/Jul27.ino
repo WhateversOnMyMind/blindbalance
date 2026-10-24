@@ -30,6 +30,10 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <esp_now.h>
+#include <esp_system.h>
+#include "Telemetry.h"
+#include "AlertWindow.h"
+telemetry::AlertWindow g_alertWindow;
 
 #ifdef ARM_IS_LEFT
   static const char ARM_CHAR = 'L';
@@ -94,9 +98,8 @@ SPIClass spi(FSPI);
 #define BIAS_ADAPT_ALPHA     0.0008f
 
 /* ── window timing ── */
-#define SHEETS_WINDOW_MS  10000     // Google Sheets upload cadence (unchanged)
-#define FB_WINDOW_MS      2000      // haptic-feedback comparison window
-#define FB_PEER_TIMEOUT   3000      // peer silent longer than this -> motor off
+#define FB_WINDOW_MS      5000      // haptic-feedback comparison window
+#define FB_PEER_TIMEOUT   (FB_WINDOW_MS + 1000)      // peer silent longer than this -> motor off
 
 /* ── feedback shaping ──
  * delta = 0.5 - myShare  (>0 means THIS arm is lagging).
@@ -124,8 +127,11 @@ volatile bool g_motorEnabled = true;   // LEFT sets via /toggle; RIGHT adopts fr
 volatile float g_feedbackDeadZone = FB_DEAD_ZONE;   // LEFT sets via /sensitivity; RIGHT adopts from peer packets
 uint32_t g_swingStartMs = 0;
 
-uint64_t lastMicros = 0;
-unsigned long lastSendTime = 0;
+uint32_t lastMicros = 0;
+telemetry::WindowClock g_sheetsClock;
+telemetry::Window g_lastWindow = {};
+uint32_t g_telemetryBoot = 0, g_telemetrySequence = 0;
+uint32_t g_maxSampleGapUs = 0, g_sampleGapCount = 0;
 unsigned long lastFbTime   = 0;
 
 /* ── ESP-NOW peer exchange ── */
@@ -250,6 +256,8 @@ void printSwing(float endAngle) {
 void updateArm(float dt) {
   Sample s = readSample();
   g_lastSample = s;
+  // Keep raw telemetry fresh, but never extrapolate across missing samples.
+  if (dt <= 0.0f) { g_inSwing = false; g_dir = 0; return; }
 
   // ── SWING AXIS: original used Y. If not Y on this mounting, change s.gy
   //    -> s.gx or s.gz here AND in calibrateGyro(). ──
@@ -282,27 +290,26 @@ void updateArm(float dt) {
     g_bias = (1.0f - BIAS_ADAPT_ALPHA) * g_bias + BIAS_ADAPT_ALPHA * wy_raw;
 }
 
-/* ── post THIS arm's 10 s window ── */
+/* ── snapshot THIS arm's window; HTTP runs in Telemetry.cpp ── */
 void sendToGoogleSheets() {
-  if (WiFi.status() != WL_CONNECTED) return;
-  HTTPClient http;
-  http.begin(scriptURL);
-  http.addHeader("Content-Type", "application/json");
-
-  float cm = g_swingDistanceSum * 100.0f;
-  String json = "{";
-  json += "\"arm\": \""   + String(ARM_CHAR) + "\",";
-  json += "\"count\": "    + String(g_swingCount) + ",";
-  json += "\"distance\": " + String(cm, 2);
-  json += "}";
-
-  Serial.println("Sending JSON: " + json);
-  int code = http.POST(json);
-  Serial.print("HTTP Response code: "); Serial.println(code);
-  http.end();
-
-  g_swingCount = 0;
-  g_swingDistanceSum = 0;
+  const uint32_t now = millis();
+  if (!g_sheetsClock.take(now, g_swingCount, g_swingDistanceSum, g_lastWindow)) return;
+  telemetry::Job job = {};
+  job.kind = telemetry::Kind::Window;
+  job.arm = ARM_CHAR;
+  job.bootId = g_telemetryBoot;
+  job.sequence = ++g_telemetrySequence;
+  job.capturedMs = now;
+  job.window = g_lastWindow;
+  job.alerted = g_alertWindow.take(now);
+  const bool queued = telemetry::enqueue(job);
+  const telemetry::Status state = telemetry::status();
+  Serial.printf("[window] boot=%lu seq=%lu start=%lu end=%lu late=%lu missed=%lu queued=%d depth=%lu dropped=%lu maxGapUs=%lu gaps=%lu\n",
+                (unsigned long)job.bootId, (unsigned long)job.sequence,
+                (unsigned long)job.window.startMs, (unsigned long)job.window.endMs,
+                (unsigned long)job.window.lateMs, (unsigned long)job.window.missedDeadlines,
+                queued, (unsigned long)state.queued, (unsigned long)state.dropped,
+                (unsigned long)g_maxSampleGapUs, (unsigned long)g_sampleGapCount);
 }
 
 /* ── ESP-NOW receive: store the OTHER arm's latest window ── */
@@ -344,6 +351,11 @@ bool peerIsFresh() {
 }
 
 /* ── run every FB_WINDOW_MS: swap windows, compute balance, drive own motor ── */
+void setVibrationOutput(int pwm) {
+  analogWrite(PIN_VIBE, pwm);
+  g_alertWindow.continuous(pwm > 0, millis());
+}
+
 void feedbackTick() {
   uint32_t myC = g_fbCount;  float myD = g_fbDist;
   g_fbCount = 0; g_fbDist = 0;
@@ -355,7 +367,7 @@ void feedbackTick() {
 
   // need a live peer to compute balance
   bool peerFresh = peerIsFresh();
-  if (!peerFresh) { analogWrite(PIN_VIBE, 0); return; }
+  if (!peerFresh) { setVibrationOutput(0); return; }
 
   uint32_t pC = peerCount; float pD = peerDist;
 
@@ -363,7 +375,7 @@ void feedbackTick() {
   if (I_AM_LEFT) { lc = myC; ld = myD; rc = pC; rd = pD; }
   else           { rc = myC; rd = myD; lc = pC; ld = pD; }
 
-  if ((lc + rc) == 0 || (ld + rd) <= 0.0f) { analogWrite(PIN_VIBE, 0); return; }
+  if ((lc + rc) == 0 || (ld + rd) <= 0.0f) { setVibrationOutput(0); return; }
 
   float countFracL = (float)lc / (float)(lc + rc);
   float distFracL  = ld / (ld + rd);
@@ -371,7 +383,7 @@ void feedbackTick() {
   float myShare    = I_AM_LEFT ? leftShare : (1.0f - leftShare);
 
   float delta = 0.5f - myShare;              // >0 => my arm is lagging
-  if (delta <= g_feedbackDeadZone) { analogWrite(PIN_VIBE, 0); return; }  // balanced or ahead
+  if (delta <= g_feedbackDeadZone) { setVibrationOutput(0); return; }  // balanced or ahead
 
   float intensity = (delta - g_feedbackDeadZone) / (0.5f - g_feedbackDeadZone);
   if (intensity < 0) intensity = 0;
@@ -380,7 +392,7 @@ void feedbackTick() {
 
   Serial.printf("[%c] leftShare=%.2f myShare=%.2f -> buzz %d\n",
                 ARM_CHAR, leftShare, myShare, pwm);
-  analogWrite(PIN_VIBE, g_motorEnabled ? pwm : 0);
+  setVibrationOutput(g_motorEnabled ? pwm : 0);
 }
 
 void setup() {
@@ -435,30 +447,36 @@ void setup() {
   calibrateGyro();               // keep the arm STILL here
 
   pinMode(PIN_VIBE, OUTPUT);
-  analogWrite(PIN_VIBE, 0);
+  setVibrationOutput(0);
 
+  g_telemetryBoot = esp_random();
+  if (!telemetry::begin(scriptURL)) Serial.println(F("Telemetry worker unavailable; sensing continues"));
+  g_sheetsClock.begin(millis());
   lastMicros = micros();
-  lastSendTime = millis();
   lastFbTime   = millis();
   g_lastSwingTime = 0; g_swingStartMs = 0;
 }
 
 void loop() {
-  uint64_t now = micros();
-  float dt = (now - lastMicros) * 1e-6f;
+  // Close the previous window before this sample can add another swing.
+  sendToGoogleSheets();
+  const uint32_t now = micros();
+  const uint32_t elapsedUs = telemetry::sampleElapsedUs(now, lastMicros);
   lastMicros = now;
+  if (elapsedUs > g_maxSampleGapUs) g_maxSampleGapUs = elapsedUs;
+  const bool validGap = telemetry::sampleGapValid(elapsedUs);
+  if (!validGap) ++g_sampleGapCount;
+  const float dt = validGap ? elapsedUs * 1e-6f : 0.0f;
 
   updateArm(dt);
   webUiHandleClient();           // service any pending HTTP requests
+  // Stop on disable or peer expiry without waiting for the comparison window.
+  if (!g_motorEnabled || !peerIsFresh()) setVibrationOutput(0);
   rawLogTick();                  // capture a raw sample row if a log session is active
 
   if (millis() - lastFbTime >= FB_WINDOW_MS) {
     feedbackTick();
     lastFbTime = millis();
-  }
-  if (millis() - lastSendTime >= SHEETS_WINDOW_MS) {
-    sendToGoogleSheets();
-    lastSendTime = millis();
   }
 
   delayMicroseconds(1000000 / SAMPLE_RATE_HZ - 200);
