@@ -7,6 +7,7 @@ This folder is a local Arduino and project workspace. It contains several genera
 | Path | Purpose |
 | --- | --- |
 | `Jul27/` | Original motor firmware, its telemetry and tests, and a separate browser demo. |
+| `HostedPiezo/Jul27/` | Hosted piezo firmware copied from B.R.P, with its own build/test notes and example config headers. |
 | `.brp-hosted-control/` | Local B.R.P site, Cloudflare Worker, and hosted piezo/motor firmware checkout. Hidden and ignored by the workspace `.gitignore`. |
 | `.brp-cloud-history/` | Another local B.R.P checkout/worktree used for cloud-history work. It contains overlapping site, Worker, and firmware files, plus the `0002_measurements.sql` history migration. |
 | `BoardDiagnostics/` | Small board-revision-C hardware check: bus scan, IMU identity check, and piezo pitch test. |
@@ -18,6 +19,8 @@ This folder is a local Arduino and project workspace. It contains several genera
 | `Jul27 (2).zip` | Archived copy of an earlier Jul27 project; inspect/extract a copy rather than editing the archive. |
 
 The root `.gitignore` excludes `.brp-hosted-control/`. The two hidden B.R.P folders are separate checkouts and can contain duplicate or different revisions of the same files. Before changing or publishing hosted code, check which checkout and branch is current; do not assume edits in one are present in the other.
+
+`HostedPiezo/Jul27/` is a visible source copy for the BlindBalance repository. The canonical hosted piezo firmware and website/backend remain in the B.R.P repository under `firmware/Jul27/`; compare the copies when updating either one.
 
 ## Original firmware: `Jul27/`
 
@@ -137,6 +140,7 @@ Some old prototype sketches contain credentials directly in source. Treat them a
 
 - For the original motor device and its local controls, start with `Jul27/`.
 - For hosted piezo or motor device firmware, start with `.brp-hosted-control/firmware/Jul27/` or `.brp-hosted-control/firmware/Jul27Motor/`, after confirming that this checkout is the one you intend to update.
+- The hosted piezo source is also checked into `HostedPiezo/Jul27/` in this repository.
 - For the website and API, inspect `.brp-hosted-control/B.R.P Website/` and `.brp-hosted-control/cloudflare/`.
 - For board electrical checks, use `BoardDiagnostics/`.
 - Do not flash the historical prototype sketches just because their names or dates look similar.
