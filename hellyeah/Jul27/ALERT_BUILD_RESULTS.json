@@ -1,0 +1,101 @@
+{
+  "verified_date": "2026-10-09",
+  "build_workspace": "C:\\Users\\debut\\blindbalance\\hellyeah\\Jul27",
+  "builds": [
+    {
+      "name": "motor-right",
+      "source_directory": "C:\\Users\\debut\\blindbalance\\hellyeah\\Jul27",
+      "fqbn": "esp32:esp32:esp32s3",
+      "core": "3.3.5",
+      "exit_code": 0,
+      "flash_bytes": 1140987,
+      "static_ram_bytes": 48328,
+      "source_sha256": {
+        "Jul27.ino": "6b23c3eda58c988442247e5cf3eca4490672c9edb9ee7dfcabb6f758297cfde1",
+        "RawLog.ino": "923b9669fc376d556a9e9feefab30c2463ea3f45db6d66f81bf0c9f83d2809bf",
+        "WebUI.ino": "8ac110049d07e8f22d958fc07a415649643f9f4ebe96badb71762d78eda2b689",
+        "Telemetry.cpp": "a6b3e460e79d197ac2e5611fbf65bc3b76a296e12b0ffda0400f2f5137dbba38",
+        "Telemetry.h": "ceb6551749b412d1dac4fc16011f2f89c1ff4082535a59bfc3fd6e8c27a5ac2f",
+        "TelemetryTiming.h": "dc2402f68f80b6903c6c01c0909b9158a0a3db0023e1ac8cd41e9ce79baba712",
+        "AlertWindow.h": "ba94d92211468746d4f09bb6a85c03cc61e7f72f7136ff306076073bf4b47687"
+      },
+      "binary_sha256": "f4017e4140f46b189c77f4a5f754b719b3dd9323e4c59b05eb9183241ed6be75",
+      "log": ".build/alert-motor-right.log"
+    },
+    {
+      "name": "motor-left",
+      "source_directory": "C:\\Users\\debut\\blindbalance\\hellyeah\\Jul27\\.build\\motor-left\\Jul27",
+      "fqbn": "esp32:esp32:esp32s3",
+      "core": "3.3.5",
+      "exit_code": 0,
+      "flash_bytes": 1152063,
+      "static_ram_bytes": 48328,
+      "source_sha256": {
+        "Jul27.ino": "991706a004bc19e7baad77d2088b774e7f518c3f282b3a3df523c59b4e489122",
+        "RawLog.ino": "923b9669fc376d556a9e9feefab30c2463ea3f45db6d66f81bf0c9f83d2809bf",
+        "WebUI.ino": "8ac110049d07e8f22d958fc07a415649643f9f4ebe96badb71762d78eda2b689",
+        "Telemetry.cpp": "a6b3e460e79d197ac2e5611fbf65bc3b76a296e12b0ffda0400f2f5137dbba38",
+        "Telemetry.h": "ceb6551749b412d1dac4fc16011f2f89c1ff4082535a59bfc3fd6e8c27a5ac2f",
+        "TelemetryTiming.h": "dc2402f68f80b6903c6c01c0909b9158a0a3db0023e1ac8cd41e9ce79baba712",
+        "AlertWindow.h": "ba94d92211468746d4f09bb6a85c03cc61e7f72f7136ff306076073bf4b47687"
+      },
+      "binary_sha256": "c81629625abe8ab881893968205940f0b240aa6d4e0f38bd18fd9dd1c8b1bbba",
+      "log": ".build/alert-motor-left.log"
+    },
+    {
+      "name": "piezo-right",
+      "source_directory": "C:\\Users\\debut\\blindbalance\\hellyeah\\Jul27\\.build\\piezo\\Jul27",
+      "fqbn": "esp32:esp32:esp32s3",
+      "core": "3.3.5",
+      "exit_code": 0,
+      "flash_bytes": 1167355,
+      "static_ram_bytes": 49800,
+      "source_sha256": {
+        "Jul27.ino": "d50d3142666944450b5177dbbcbff32bf27e2090811b714c1c62e508671f2857",
+        "RawLog.ino": "923b9669fc376d556a9e9feefab30c2463ea3f45db6d66f81bf0c9f83d2809bf",
+        "WebUI.ino": "8ac110049d07e8f22d958fc07a415649643f9f4ebe96badb71762d78eda2b689",
+        "Telemetry.cpp": "a6b3e460e79d197ac2e5611fbf65bc3b76a296e12b0ffda0400f2f5137dbba38",
+        "Telemetry.h": "ceb6551749b412d1dac4fc16011f2f89c1ff4082535a59bfc3fd6e8c27a5ac2f",
+        "TelemetryTiming.h": "dc2402f68f80b6903c6c01c0909b9158a0a3db0023e1ac8cd41e9ce79baba712",
+        "AlertWindow.h": "ba94d92211468746d4f09bb6a85c03cc61e7f72f7136ff306076073bf4b47687",
+        "../common/FirmwareLogic.h": "f9ede6fad61723e4c5a271f0768d2fcb198c292568f163fc26c1c117a77d5b3f",
+        "../common/MMC5983MA.h": "08059f253d002029798ec0e0ac54bc4ed29db1a849f351cc5a5a708194fbc2f9"
+      },
+      "binary_sha256": "31d57362b79cb56731535dfd4410f21fcc4e29e5146950f16be0e1b951bc0b65",
+      "log": ".build/alert-piezo-right.log"
+    },
+    {
+      "name": "piezo-left",
+      "source_directory": "C:\\Users\\debut\\blindbalance\\hellyeah\\Jul27\\.build\\piezo-left\\Jul27",
+      "fqbn": "esp32:esp32:esp32s3",
+      "core": "3.3.5",
+      "exit_code": 0,
+      "flash_bytes": 1178579,
+      "static_ram_bytes": 49800,
+      "source_sha256": {
+        "Jul27.ino": "e0e678f489ff005f8738f0a12598eacfa37f6ede691c3125cb8604a30d64ec67",
+        "RawLog.ino": "923b9669fc376d556a9e9feefab30c2463ea3f45db6d66f81bf0c9f83d2809bf",
+        "WebUI.ino": "8ac110049d07e8f22d958fc07a415649643f9f4ebe96badb71762d78eda2b689",
+        "Telemetry.cpp": "a6b3e460e79d197ac2e5611fbf65bc3b76a296e12b0ffda0400f2f5137dbba38",
+        "Telemetry.h": "ceb6551749b412d1dac4fc16011f2f89c1ff4082535a59bfc3fd6e8c27a5ac2f",
+        "TelemetryTiming.h": "dc2402f68f80b6903c6c01c0909b9158a0a3db0023e1ac8cd41e9ce79baba712",
+        "AlertWindow.h": "ba94d92211468746d4f09bb6a85c03cc61e7f72f7136ff306076073bf4b47687",
+        "../common/FirmwareLogic.h": "f9ede6fad61723e4c5a271f0768d2fcb198c292568f163fc26c1c117a77d5b3f",
+        "../common/MMC5983MA.h": "08059f253d002029798ec0e0ac54bc4ed29db1a849f351cc5a5a708194fbc2f9"
+      },
+      "binary_sha256": "aafcccd80f70bbf1de781083f8f442cc0f24cca35c55ab9dc8d99b2bbf7cd998",
+      "log": ".build/alert-piezo-left.log"
+    }
+  ],
+  "receiver_sha256": "c006d81987c2eb921336d5409f76800642f1f9215af1c96768b41e384a43db63",
+  "tests": {
+    "native_timing": "passed",
+    "alert_window": "passed",
+    "production_worker_scenarios_passed": 10,
+    "apps_script_mock_tests_passed": 5
+  },
+  "review": "Independent review passed after same-millisecond alert regression fix.",
+  "flashed": false,
+  "apps_script_deployed": false,
+  "physical_output_verified": false
+}

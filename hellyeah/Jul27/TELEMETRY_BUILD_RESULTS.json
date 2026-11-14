@@ -1,0 +1,91 @@
+{
+  "verified_date": "2026-10-09",
+  "builds": [
+    {
+      "name": "motor-right",
+      "fqbn": "esp32:esp32:esp32s3",
+      "core": "3.3.5",
+      "exit_code": 0,
+      "flash_bytes": 1140771,
+      "static_ram_bytes": 48320,
+      "source_sha256": {
+        "Jul27.ino": "3f2a98d254bc8539b66124828019c7148251c0c8e976a1d538d610c7aec3b067",
+        "RawLog.ino": "923b9669fc376d556a9e9feefab30c2463ea3f45db6d66f81bf0c9f83d2809bf",
+        "WebUI.ino": "8ac110049d07e8f22d958fc07a415649643f9f4ebe96badb71762d78eda2b689",
+        "Telemetry.cpp": "2640043f0f0039a60503b367c18c6220a2178630a02f931408052baa3ef944c7",
+        "Telemetry.h": "c0cd51b9acb0fe0098d641418ebadc526d1516ed25cc0c0ed0493cc1ef46dfb7",
+        "TelemetryTiming.h": "dc2402f68f80b6903c6c01c0909b9158a0a3db0023e1ac8cd41e9ce79baba712"
+      },
+      "binary_sha256": "ad298632b42c12a619e4b5aa4b31fa3d355019303286e42ad78c7d88e6e71ce8",
+      "log": ".build/motor-right.log"
+    },
+    {
+      "name": "motor-left",
+      "fqbn": "esp32:esp32:esp32s3",
+      "core": "3.3.5",
+      "exit_code": 0,
+      "flash_bytes": 1151819,
+      "static_ram_bytes": 48320,
+      "source_sha256": {
+        "Jul27.ino": "68db6fc4753e616d88a831f04567a3b4e45dc408188badbe9dc2c10285a89991",
+        "RawLog.ino": "923b9669fc376d556a9e9feefab30c2463ea3f45db6d66f81bf0c9f83d2809bf",
+        "WebUI.ino": "8ac110049d07e8f22d958fc07a415649643f9f4ebe96badb71762d78eda2b689",
+        "Telemetry.cpp": "2640043f0f0039a60503b367c18c6220a2178630a02f931408052baa3ef944c7",
+        "Telemetry.h": "c0cd51b9acb0fe0098d641418ebadc526d1516ed25cc0c0ed0493cc1ef46dfb7",
+        "TelemetryTiming.h": "dc2402f68f80b6903c6c01c0909b9158a0a3db0023e1ac8cd41e9ce79baba712"
+      },
+      "binary_sha256": "69bf4886dc93dbf3ed94184df748ebf8b685a6a3d768ebc5d62b99905f282557",
+      "log": ".build/motor-left.log"
+    },
+    {
+      "name": "piezo-right",
+      "fqbn": "esp32:esp32:esp32s3",
+      "core": "3.3.5",
+      "exit_code": 0,
+      "flash_bytes": 1167171,
+      "static_ram_bytes": 49792,
+      "source_sha256": {
+        "Jul27.ino": "11844c136d24764f1dc473d1ae77c0a1d4484eef23c09e3f91fc84d7a74c6a0c",
+        "RawLog.ino": "923b9669fc376d556a9e9feefab30c2463ea3f45db6d66f81bf0c9f83d2809bf",
+        "WebUI.ino": "8ac110049d07e8f22d958fc07a415649643f9f4ebe96badb71762d78eda2b689",
+        "Telemetry.cpp": "2640043f0f0039a60503b367c18c6220a2178630a02f931408052baa3ef944c7",
+        "Telemetry.h": "c0cd51b9acb0fe0098d641418ebadc526d1516ed25cc0c0ed0493cc1ef46dfb7",
+        "TelemetryTiming.h": "dc2402f68f80b6903c6c01c0909b9158a0a3db0023e1ac8cd41e9ce79baba712",
+        "../common/FirmwareLogic.h": "f9ede6fad61723e4c5a271f0768d2fcb198c292568f163fc26c1c117a77d5b3f",
+        "../common/MMC5983MA.h": "08059f253d002029798ec0e0ac54bc4ed29db1a849f351cc5a5a708194fbc2f9"
+      },
+      "binary_sha256": "30e80157d95e7517e72cae41bd43cdea2d49c3eb7f969ddc1d9679ed20137417",
+      "log": ".build/piezo-right.log"
+    },
+    {
+      "name": "piezo-left",
+      "fqbn": "esp32:esp32:esp32s3",
+      "core": "3.3.5",
+      "exit_code": 0,
+      "flash_bytes": 1178379,
+      "static_ram_bytes": 49792,
+      "source_sha256": {
+        "Jul27.ino": "c050c41d0e8cfca7dc1f7b64edfe7c451ca4362a5f049d30d837a7e530d204b3",
+        "RawLog.ino": "923b9669fc376d556a9e9feefab30c2463ea3f45db6d66f81bf0c9f83d2809bf",
+        "WebUI.ino": "8ac110049d07e8f22d958fc07a415649643f9f4ebe96badb71762d78eda2b689",
+        "Telemetry.cpp": "2640043f0f0039a60503b367c18c6220a2178630a02f931408052baa3ef944c7",
+        "Telemetry.h": "c0cd51b9acb0fe0098d641418ebadc526d1516ed25cc0c0ed0493cc1ef46dfb7",
+        "TelemetryTiming.h": "dc2402f68f80b6903c6c01c0909b9158a0a3db0023e1ac8cd41e9ce79baba712",
+        "../common/FirmwareLogic.h": "f9ede6fad61723e4c5a271f0768d2fcb198c292568f163fc26c1c117a77d5b3f",
+        "../common/MMC5983MA.h": "08059f253d002029798ec0e0ac54bc4ed29db1a849f351cc5a5a708194fbc2f9"
+      },
+      "binary_sha256": "9a35ea2616d1bc75bb9d6b4939e540ed0e9cb5de457816487b5ca3238f444333",
+      "log": ".build/piezo-left.log"
+    }
+  ],
+  "tests": {
+    "native_timing_suite": "passed",
+    "production_worker_scenarios_passed": 10,
+    "existing_motor_demo_tests_passed": 20,
+    "existing_piezo_demo_tests_passed": 21
+  },
+  "review": "Independent read-only review found no actionable correctness issues.",
+  "flashed": false,
+  "physical_timing_verified": false,
+  "apps_script_receiver_verified": false
+}

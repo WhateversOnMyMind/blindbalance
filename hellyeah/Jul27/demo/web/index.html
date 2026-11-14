@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#eeeeee">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+  <title>IMU board demo</title>
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <h1>IMU board demo</h1>
+      <span class="hardware">ESP32-S3 <span>+</span> ICM-42688-P</span>
+    </header>
+    <section class="intro">
+      <p class="subtitle">Keep the board still to calibrate, then rotate or move it.</p>
+      <div class="source-switch" aria-label="Data source"><button id="usb" type="button" aria-pressed="false">Connect USB</button><button id="live" type="button" aria-pressed="false">Wi-Fi</button><button id="simulate" type="button" aria-pressed="false">Simulated motion</button></div>
+    </section>
+    <div class="workspace">
+      <section class="viewer card" aria-label="3D board visualization">
+        <div class="viewer-top"><div><span id="status" class="badge waiting">CONNECTING</span><span id="source-label" class="quiet">Live sensor data</span></div><button id="camera-reset" class="text-button" type="button">Reset camera</button></div>
+        <canvas id="scene" aria-label="Interactive 3D board. Drag to orbit the camera, scroll to zoom."></canvas>
+        <div class="scene-caption"><span><i class="axis x"></i>X <i class="axis y"></i>Y <i class="axis z"></i>Z <span class="quiet" title="X: board right; Y: away from USB; Z: out of component side">Board axes</span></span><span class="quiet">Drag to orbit / scroll to zoom</span></div>
+        <div class="viewer-message" id="message" role="status">Connecting to the board…</div>
+        <progress id="calibration-progress" value="0" max="1" aria-label="Still calibration progress" hidden></progress>
+      </section>
+      <aside class="controls card">
+        <div class="panel-heading">Controls</div>
+        <div class="pose-heading"><h2>Orientation</h2><span>degrees · relative view</span></div>
+        <div class="angle-row"><span><i class="axis x"></i>Roll <small>X</small></span><output id="roll">—</output></div>
+        <div class="angle-row"><span><i class="axis y"></i>Pitch <small>Y</small></span><output id="pitch">—</output></div>
+        <div class="angle-row"><span><i class="axis z"></i>Yaw <small>Z</small></span><output id="yaw">—</output></div>
+        <div class="divider"></div>
+        <label class="toggle-row" for="movement"><span>Show movement<small>Acceleration-driven motion effect</small></span><input id="movement" type="checkbox" checked></label>
+        <label class="gain-label" for="gain">Movement gain <output id="gain-value">1.8×</output></label>
+        <input id="gain" type="range" min="0.5" max="4" value="1.8" step="0.1">
+        <div class="range-labels"><span>0.5×</span><span>4×</span></div>
+        <div class="divider"></div>
+        <button id="recenter" class="primary" type="button" disabled>Recenter view</button>
+        <button id="calibrate" class="secondary" type="button" disabled>Calibrate gyro</button>
+        <p class="control-note">Hold still for 2 seconds to calibrate. Recenter makes the current pose your new reference.</p>
+        <dl class="telemetry"><div><dt>Sample rate</dt><dd id="rate">— Hz</dd></div><div><dt>IMU temperature</dt><dd id="temperature">— °C</dd></div><div><dt>Data age</dt><dd id="age">—</dd></div></dl>
+      </aside>
+      <section class="chart-card card">
+        <div class="chart-heading"><div><h2>Linear acceleration</h2><p>World frame · m/s² · last 8 seconds</p></div><div class="chart-legend"><span class="x-text">X <output id="ax">—</output></span><span class="y-text">Y <output id="ay">—</output></span><span class="z-text">Z <output id="az">—</output></span></div></div>
+        <canvas id="chart" aria-label="Graph of gravity-corrected X, Y and Z acceleration over time"></canvas>
+      </section>
+    </div>
+    <footer><p>Movement is a damped response to acceleration, not measured position. Yaw may drift.</p><span>Composite Board rev C / schematic model</span></footer>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

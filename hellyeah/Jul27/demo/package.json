@@ -1,0 +1,10 @@
+{
+  "name": "jul27-board-motion-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "build": "node tools/build-assets.mjs",
+    "start": "node tools/serve.mjs"
+  }
+}
